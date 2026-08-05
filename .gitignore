@@ -1,0 +1,28 @@
+# Python Geçici Dosyaları
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Sanal Ortam (Virtual Environment)
+venv/
+.venv/
+env/
+
+# Ortam Değişkenleri ve Gizli Anahtarlar (API Key)
+.env
+
+# VS Code ve Editör Dosyaları
+.vscode/
+.idea/
+
+# İşletim Sistemi Dosyaları
+.DS_Store
+Thumbs.db
+
+# C++ / Arduino Derleme Dosyaları (ESP32 için)
+.pio/
+build/
+*.bin
+*.elf
