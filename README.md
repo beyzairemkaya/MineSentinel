@@ -25,3 +25,16 @@ MineSentinel/
 ├── data/          # Sensör veritabanı (CSV)
 ├── docs/          # Mimari ve donanım dokümantasyonu
 └── tests/         # Test senaryoları
+
+Kurulum ve Başlangıç
+(Bu kısım proje ilerledikçe güncellenecektir)
+
+Repoyu klonlayın:
+
+Bash
+git clone [https://github.com/KULLANICI_ADIN/MineSentinel.git](https://github.com/KULLANICI_ADIN/MineSentinel.git)
+cd MineSentinel
+Gerekli kütüphaneleri yükleyin:
+
+Bash
+pip install -r requirements.txt
