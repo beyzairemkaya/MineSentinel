@@ -62,7 +62,7 @@ if __name__ == "__main__":
     output_path = os.path.join(data_dir, "sample_sensor_data.csv")
     df_data.to_csv(output_path, index=False)
 
-    print(f"Veri seti başarıyla kaydedildi: {output_path}")
+    
     
 
 
