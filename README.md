@@ -1,4 +1,4 @@
-# 🛡️ MineSentinel AIoT Platform (v1.0)
+# MineSentinel AIoT Platform (v1.0)
 
 **MineSentinel**, yeraltı madenciliğinde çalışan işçilerin güvenliğini artırmak amacıyla geliştirilmiş Edge AI ve IoT tabanlı bir güvenlik platformudur. 
 
@@ -26,15 +26,18 @@ MineSentinel/
 ├── docs/          # Mimari ve donanım dokümantasyonu
 └── tests/         # Test senaryoları
 
-Kurulum ve Başlangıç
-(Bu kısım proje ilerledikçe güncellenecektir)
 
-Repoyu klonlayın:
 
-Bash
-git clone [https://github.com/KULLANICI_ADIN/MineSentinel.git](https://github.com/KULLANICI_ADIN/MineSentinel.git)
-cd MineSentinel
-Gerekli kütüphaneleri yükleyin:
+### Anomaly Detection
 
-Bash
-pip install -r requirements.txt
+MineSentinel uses Isolation Forest for unsupervised anomaly detection.
+
+The initial `contamination` parameter was set to `0.20`, based on the
+observed proportion of higher-risk samples in the initial synthetic
+dataset.
+
+> This is an initial calibration value and does not represent the
+> real-world anomaly rate in mining environments.
+
+For the full rationale and EDA analysis, see
+[Isolation Forest Contamination Decision](docs/decisions/005-isolation-forest-contamination.md).
