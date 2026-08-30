@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from pathlib import Path
+from sklearn.metrics import classification_report, confusion_matrix
 
 class AnomalyDetector:
     def __init__(self,contamination=0.20,random_state=42):
@@ -38,7 +39,11 @@ if __name__=="__main__":
     X = df[["gas_ppm", "accel_g", "duration_sec"]]
     detector = AnomalyDetector()
     detector.fit(X)
-    print(detector.predict_single(gas=155, accel=1.01, durr=0))  
-    print(detector.predict_single(gas=850, accel=4.2, durr=6)) 
+    predictions=detector.predict(X)
+    y_true = df["risk_level"].apply(lambda x: 1 if x == "LOW" else -1)
+    print("--- Confusion Matrix ---")
+    print(confusion_matrix(y_true, predictions))
+    print("\n--- Classification Report ---")
+    print(classification_report(y_true, predictions, target_names=["Anomali (-1)", "Normal (1)"]))
 
         
