@@ -41,3 +41,22 @@ dataset.
 
 For the full rationale and EDA analysis, see
 [Isolation Forest Contamination Decision](docs/decisions/005-isolation-forest-contamination.md).
+
+## 🛡 Üç Katmanlı Güvenlik ve Karar Mekanizması
+
+MineSentinel, tek bir hata noktasına (Single Point of Failure) bağımlı kalmamak adına sensör verilerini 3 tamamlayıcı katmanda işler:
+
+### 1. Kural Tabanlı Risk Motoru (`RiskEngine`)
+* **Türü:** Deterministik & Ağırlıklı Matematiksel Model
+* **Görevi:** Sensörlerden gelen gaz, ivme ve maruziyet süresi değerlerini normalleştirerek 0-100 arasında net bir **Risk Skoru** üretir.
+* **Neden Gerekli?** Önceden tanımlanmış net fiziksel sınırları (ör. anlık yüksek gaz veya sert darbe) gecikmesiz ve kesin kurallarla doğrudan tespit eder.
+
+### 2. Denetimsiz Anomali Tespiti (`Isolation Forest`)
+* **Türü:** Unsupervised Machine Learning
+* **Görevi:** Etiketlere ihtiyaç duymadan, çok boyutlu sensör uzayında normal davranış kümesinden sapan aykırı noktaları izole eder.
+* **Neden Gerekli?** Daha önce tanımlanmamış kriz senaryolarını, beklenmeyen sensör dalgalanmalarını ve sıfır-gün (zero-day) anomalilerini yakalar.
+
+### 3. Denetimli Risk Sınıflandırma (`Supervised Classifier`)
+* **Türü:** Supervised Machine Learning (Random Forest)
+* **Görevi:** Geçmiş etiketli veri modellerini öğrenerek durumun ciddiyetini (`LOW`, `MEDIUM`, `CRITICAL`) sınıflandırır ve olasılıksal güven skoru üretir.
+* **Neden Gerekli?** Tehlikenin sadece varlığını değil, hangi seviyede olduğunu ve olasılık dağılımını (ör. %92 CRITICAL) belirleyerek doğru müdahale kararının verilmesini sağlar.
