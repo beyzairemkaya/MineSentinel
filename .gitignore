@@ -26,3 +26,10 @@ Thumbs.db
 build/
 *.bin
 *.elf
+
+# Büyük Veri ve Model Dosyaları
+*.joblib
+*.pkl
+models/*.joblib
+models/*.pkl
+
