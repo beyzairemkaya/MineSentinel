@@ -18,7 +18,7 @@ class RiskEngine:
     def normalize_duration(self, durr):
         return float(np.clip(durr/10,0.0,1.0))
 
-    def calculate_risk(self,gas,acc,durr):
+    def calculate_risk_score(self,gas,acc,durr):
         gas_risk=self.normalize_gas(gas)*self.w_gas
         accel_risk=self.normalize_acceleration(acc)*self.w_accel
         durr_risk=self.normalize_duration(durr)*self.w_duration

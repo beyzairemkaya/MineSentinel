@@ -29,17 +29,20 @@ class RiskClassifier:
             raise ValueError("The model has not been trained yet. The fit() function must be called first.")
         return self.model.predict_proba(X)
 
-    def predict_single(self, gas, accel, durr):
+    def predict_single(self, gas: float, accel: float, durr: float):
         if not self.is_fitted:
-            raise ValueError("The model has not been trained yet. The fit() function must be called first.")
-        sample = pd.DataFrame(
-            [[gas, accel, durr]], 
-            columns=["gas_ppm", "accel_g", "duration_sec"]
-        )
-        prediction = self.predict(sample)[0]
-        probabilities = self.predict_proba(sample)[0]
-        class_probs = dict(zip(self.model.classes_, np.round(probabilities, 3)))
-        return prediction, class_probs
+            raise ValueError("The model has not been trained yet. Call load_model() or fit() first.")
+        
+        sample = np.array([[gas, accel, durr]])
+        prediction = self.model.predict(sample)[0]
+        
+        proba_values = self.model.predict_proba(sample)[0]
+        classes = self.model.classes_
+        probabilities = {str(cls): float(prob) for cls, prob in zip(classes, proba_values)}
+        
+        confidence = float(np.max(proba_values))
+        
+        return prediction, confidence, probabilities
 
     def save_model(self, filepath):
         if not self.is_fitted:
@@ -85,7 +88,7 @@ if __name__=="__main__":
     print("\n--- Classification Report  ---")
     print(classification_report(y_test, y_pred))
 
-    # 5 Sav the model
+    # 5 Save the model
     clf.save_model(model_path)
     
     # 6 Test the saved model
