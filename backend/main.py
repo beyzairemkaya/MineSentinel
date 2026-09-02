@@ -1,12 +1,14 @@
 from pathlib import Path
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from collections import deque
 
 from backend.schemas import TelemetryInput, TelemetryResponse
 from backend.risk_engine import RiskEngine
 from backend.anomaly import AnomalyDetector
 from backend.classifier import RiskClassifier
 from backend.llm import generate_emergency_report
+import time
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ANOMALY_MODEL_PATH = BASE_DIR / "models" / "anomaly_detector.joblib"
@@ -16,6 +18,29 @@ CLASSIFIER_MODEL_PATH = BASE_DIR / "models" / "risk_classifier.joblib"
 anomaly_detector = AnomalyDetector()
 risk_classifier = RiskClassifier()
 risk_engine = RiskEngine()
+telemetry_history = deque(maxlen=50)
+latest_incident_report = {"report": None, "timestamp": None}
+# Son LLM çağrısının zamanını tutan kilit değişkeni
+last_llm_call_time = 0.0
+LLM_COOLDOWN_SECONDS = 30.0  
+
+def background_llm_task(gas_ppm: float, accel_g: float, duration_sec: float, risk_level: str, confidence: float):
+    """LLM task function that runs in the background and does not block the main line"""
+    global last_llm_call_time
+    try:
+        print("[*] Background LLM emergency report is being prepared...")
+        report = generate_emergency_report(
+            gas_ppm=gas_ppm,
+            accel_g=accel_g,
+            duration_sec=duration_sec,
+            risk_level=risk_level,
+            confidence=confidence
+        )
+        latest_incident_report["report"] = report
+        latest_incident_report["timestamp"] = time.time()
+        print("[+] LLM report prepared and saved!")
+    except Exception as e:
+        print(f"[-] Background LLM error: {e}")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,7 +70,7 @@ def read_root():
     }
 
 @app.post("/api/telemetry", response_model=TelemetryResponse)
-def process_telemetry(payload: TelemetryInput):
+def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks):
     """
     Ingests sensor data from ESP32/simulation, runs inference through
     RiskEngine, AnomalyDetector, and Classifier, and triggers LLM on critical events.
@@ -59,15 +84,38 @@ def process_telemetry(payload: TelemetryInput):
         is_anomaly=anomaly_detector.predict_single(payload.gas_ppm,payload.accel_g,payload.duration_sec)
         predicted_risk, confidence, probabilities=risk_classifier.predict_single(payload.gas_ppm,payload.accel_g,payload.duration_sec)
         emergency_report=None
-        if predicted_risk=="CRITICAL":
-            emergency_report=generate_emergency_report(
-                gas_ppm=payload.gas_ppm,
-                accel_g=payload.accel_g,
-                duration_sec=payload.duration_sec,
-                risk_level=predicted_risk,
-                confidence=confidence
+        
+        telemetry_history.append({
+            "timestamp": time.time(),
+            "gas_ppm": payload.gas_ppm,
+            "accel_g": payload.accel_g,
+            "duration_sec": payload.duration_sec,
+            "risk_level": predicted_risk,
+            "rule_risk_score": rule_score,
+            "is_anomaly": is_anomaly
+        })
 
+        # 2. Sadece KRİTİK durumlarda arka plan LLM kontrolü yap
+        global last_llm_call_time
+        current_time = time.time()
+
+        if predicted_risk == "CRITICAL":
+            if (current_time - last_llm_call_time) > LLM_COOLDOWN_SECONDS:
+                last_llm_call_time = current_time
+                background_tasks.add_task(
+                    background_llm_task,
+                    gas_ppm=payload.gas_ppm,
+                    accel_g=payload.accel_g,
+                    duration_sec=payload.duration_sec,
+                    risk_level=predicted_risk,
+                    confidence=confidence
                 )
+            else:
+                print(f"[*] Lock active: {int(current_time - last_llm_call_time)} seconds have passed since the last report. No new LLM call has been made.")
+            
+
+        
+        emergency_report = latest_incident_report.get("report")
         return TelemetryResponse(
             miner_id=payload.miner_id,
             zone=payload.zone,
@@ -81,3 +129,11 @@ def process_telemetry(payload: TelemetryInput):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+
+@app.get("/api/dashboard-data")
+def get_dashboard_data():
+    """Streamlit panel returns the latest telemetry history and LLM report."""
+    return {
+        "telemetry_history": list(telemetry_history),
+        "latest_incident": latest_incident_report
+    }
