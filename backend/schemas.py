@@ -37,3 +37,4 @@ class TelemetryResponse(BaseModel):
     rule_risk_score: float = Field(..., ge=0.0, le=100.0, description="Rule-based calculated risk score")
     emergency_report: Optional[str] = Field(default=None, description="LLM-generated Action Report for critical incidents")
     timestamp: datetime = Field(default_factory=datetime.utcnow, description="UTC processing timestamp")
+    action_required: bool = False

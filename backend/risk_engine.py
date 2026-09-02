@@ -23,6 +23,9 @@ class RiskEngine:
         accel_risk=self.normalize_acceleration(acc)*self.w_accel
         durr_risk=self.normalize_duration(durr)*self.w_duration
         risk=(gas_risk+accel_risk+durr_risk)*100
+        is_completely_still = abs(acc - 1.0) <= 0.08
+        if is_completely_still and durr >= 10.0:
+            risk = max(risk, 75.0)
         return round(risk,2)
 
     def evaluate_risk_level(self,risk):

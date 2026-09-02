@@ -116,6 +116,7 @@ def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks
 
         
         emergency_report = latest_incident_report.get("report")
+        action_required = (predicted_risk != "LOW")
         return TelemetryResponse(
             miner_id=payload.miner_id,
             zone=payload.zone,
@@ -124,7 +125,8 @@ def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks
             class_probabilities=probabilities,
             is_anomaly=is_anomaly,
             rule_risk_score=rule_score,
-            emergency_report=emergency_report
+            emergency_report=emergency_report,
+            action_required=action_required
         )
 
     except Exception as e:
