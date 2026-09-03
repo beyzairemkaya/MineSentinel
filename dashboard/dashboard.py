@@ -4,6 +4,10 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import time
+import os
+
+
+BACKEND_URL = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
 
 # 1. Page Configuration
 st.set_page_config(
@@ -134,14 +138,13 @@ with st.sidebar:
     st.markdown("**Gateway 01:** SYNCING")
     st.markdown("**LLM Diagnostic:** READY")
 
-# 4. Backend Communication
-BACKEND_URL = "http://127.0.0.1:8000/api/dashboard-data"
+
 
 
 def fetch_data():
     """Fetches real-time telemetry buffer and incident reports from FastAPI backend."""
     try:
-        response = requests.get(BACKEND_URL, timeout=2)
+        response = requests.get(f"{BACKEND_URL}/api/dashboard-data")
         if response.status_code == 200:
             return response.json()
     except Exception as e:

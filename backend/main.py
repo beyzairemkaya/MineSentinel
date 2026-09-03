@@ -5,8 +5,8 @@ from collections import deque
 
 from backend.schemas import TelemetryInput, TelemetryResponse
 from backend.risk_engine import RiskEngine
-from backend.anomaly import AnomalyDetector
-from backend.classifier import RiskClassifier
+from backend.ml.anomaly import AnomalyDetector
+from backend.ml.classifier import RiskClassifier
 from backend.llm import generate_emergency_report
 import time
 

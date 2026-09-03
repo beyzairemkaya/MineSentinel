@@ -6,8 +6,8 @@ import pytest
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT_DIR))
 
-from backend.anomaly import AnomalyDetector
-from backend.classifier import RiskClassifier
+from backend.ml.anomaly import AnomalyDetector
+from backend.ml.classifier import RiskClassifier
 
 
 @pytest.fixture(scope="module")
