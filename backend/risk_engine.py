@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pathlib import Path
 
 class RiskEngine:
     THRESHOLD_LOW = 30.0
@@ -38,10 +39,12 @@ class RiskEngine:
         return risk_level
 
 if __name__=="__main__":
-    df = pd.read_csv("../data/sample_sensor_data.csv")
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    DATA_PATH = BASE_DIR / "data" / "sample_sensor_data.csv"
+    df = pd.read_csv(DATA_PATH)
     r_eng=RiskEngine()
     
-    df["risk_score"] = df.apply(lambda row: r_eng.calculate_risk(row["gas_ppm"], row["accel_g"], row["duration_sec"]), axis=1)
+    df["risk_score"] = df.apply(lambda row: r_eng.calculate_risk_score(row["gas_ppm"], row["accel_g"], row["duration_sec"]), axis=1)
     df["risk_level"] = df["risk_score"].apply(r_eng.evaluate_risk_level)
     df.to_csv("../data/processed_sensor_data.csv", index=False)
     
