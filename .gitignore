@@ -28,8 +28,10 @@ build/
 *.elf
 
 # Büyük Veri ve Model Dosyaları
-*.joblib
+# Demo ve sıfır kurulum için MineSentinel modelleri takip edilsin:
+!models/*.joblib
+
+# Diğer gereksiz pickle/büyük dosyalar engellenmeye devam etsin:
 *.pkl
-models/*.joblib
 models/*.pkl
 
