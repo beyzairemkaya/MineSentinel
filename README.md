@@ -206,7 +206,7 @@ MineSentinel/
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/your-username/MineSentinel.git
+git clone https://github.com/beyzairemkaya/MineSentinel.git
 cd MineSentinel
 python -m venv venv
 ```

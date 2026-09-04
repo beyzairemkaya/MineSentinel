@@ -65,7 +65,7 @@ The **Isolation Forest** isolates observations by randomly selecting a feature a
 ### Hyperparameter Configuration
 
 * `n_estimators = 100`: Number of isolation trees in the ensemble.
-* `contamination = 0.20`: Expected proportion of anomalous outliers in underground baseline calibration (refer to `docs/decisions/005_isolation_forest_params.md`).
+* `contamination = 0.20`: Expected proportion of anomalous outliers in underground baseline calibration (refer to `docs/decisions/005_isolation_forest_contamination.md`).
 * `random_state = 42`: Fixed seed for reproducible partition generation.
 
 ### Inference Mapping
