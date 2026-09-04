@@ -119,20 +119,15 @@ void loop() {
     http.addHeader("Content-Type", "application/json");
     http.setTimeout(2500);
 
-    /*
+    
     StaticJsonDocument<256> doc;
     doc["gas_ppm"] = gasPpm;
     doc["accel_g"] = accelG;
     doc["duration_sec"] = durationSec;
     doc["miner_id"] = "MINER-ESP32";
     doc["zone"] = "Sector-3";
-    */
-    StaticJsonDocument<256> doc;
-    doc["gas_ppm"] = gasPpm;
-    doc["accel_g"] = 6.0;       // <-- Sabit yüksek darbe/çökme ivmesi
-    doc["duration_sec"] = 10.0;  // <-- 6 saniyedir süren tehlike
-    doc["miner_id"] = "MINER-ESP32";
-    doc["zone"] = "Sector-3";
+    
+    
 
     String requestBody;
     serializeJson(doc, requestBody);
