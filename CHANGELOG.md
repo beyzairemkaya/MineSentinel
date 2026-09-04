@@ -20,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Automated Verification Suite:** Pytest suites covering deterministic risk thresholds, model inference pipelines, and API contract invariants.
 
 ### Changed
-- Migrated generative incident synthesis backend from Google Gemini to Groq REST API (`requests`) for ultra-low latency report generation.
 - Re-aligned deterministic risk scoring boundaries in `risk_engine.py` to ensure $R \ge 70.0$ strictly evaluates to `CRITICAL`.
 - Standardized API contracts in `docs/api_spec.md` with explicit non-overlapping score intervals ($[0, 30)$, $[30, 70)$, $[70, 100]$) and default worker parameters.
 - Reorganized firmware directories to comply with native Arduino IDE path conventions (`firmware/mine_safety_esp32/mine_safety_esp32.ino`).

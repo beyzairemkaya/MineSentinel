@@ -309,8 +309,8 @@ Engineering decisions and trade-offs are documented in [`docs/decisions/`](docs/
 - [ADR 001: Offline-First and Edge-Autonomous Connectivity Strategy](docs/decisions/001_offline_first_and_connectivity.md)
 - [ADR 002: Pessimistic Safety Gating and Arbitration Strategy](docs/decisions/002_pessimistic_safety_gating.md)
 - [ADR 003: Dual-Model ML Architecture](docs/decisions/003_dual_model_ml_architecture.md)
-- [ADR 004: Mathematical Risk Score Formulation and Threshold Calibration](docs/decisions/004_risk_score_design.md)
-- [ADR 005: Isolation Forest Contamination Parameter Calibration](docs/decisions/005_isolation_forest_params.md)
+- [ADR 004: Mathematical Risk Score Formulation and Threshold Calibration](docs/decisions/004_risk_score-design.md)
+- [ADR 005: Isolation Forest Contamination Parameter Calibration](docs/decisions/005_isolation_forest_contamination.md)
 - [ADR 006: Asynchronous LLM Incident Reporting and Rate-Limiting Cooldown](docs/decisions/006_asynchronous_llm_reporting.md)
 - [ADR 007: Dashboard Fragment Rendering and Dynamic Configuration](docs/decisions/007_dashboard_fragment_rendering.md)
 
