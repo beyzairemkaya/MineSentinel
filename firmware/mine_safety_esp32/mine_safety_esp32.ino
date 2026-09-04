@@ -1,8 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Wire.h>
-#include <Adafruit_MPU6050.h>
-#include <Adafruit_Sensor.h>
 #include <ArduinoJson.h>
 
 
@@ -171,7 +169,7 @@ void loop() {
       String response = http.getString();
       Serial.println("[<] Server Response (" + String(httpResponseCode) + "): " + response);
 
-      StaticJsonDocument<256> resDoc;
+      StaticJsonDocument<4096> resDoc;
       DeserializationError err = deserializeJson(resDoc, response);
 
       if (!err) {
