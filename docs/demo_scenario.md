@@ -13,7 +13,7 @@ Before initiating the live demo, verify the following services and hardware link
 | **ESP32 Edge Device** | USB Serial / 115200 baud | Wi-Fi connected, I2C (`0x68`) initialized |
 | **FastAPI Core** | `http://localhost:8000` | Swagger UI accessible at `/docs` |
 | **Streamlit Dashboard**| `http://localhost:8501` | Live telemetry graphs streaming |
-| **Gemini API** | HTTPS / Outbound | Valid API key configured in `.env` |
+| **Groq API** | HTTPS / Outbound | Valid API key configured in `.env` |
 
 ---
 
