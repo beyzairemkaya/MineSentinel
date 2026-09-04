@@ -50,8 +50,8 @@ def test_evaluate_risk_level_boundaries(risk_engine):
     # Mid-range MEDIUM region
     assert risk_engine.evaluate_risk_level((low_th + crit_th) / 2) == "MEDIUM"
 
-    # Upper edge of MEDIUM region (risk == THRESHOLD_CRITICAL)
-    assert risk_engine.evaluate_risk_level(crit_th) == "MEDIUM"
+    
+    assert risk_engine.evaluate_risk_level(crit_th) == "CRITICAL"
 
     # CRITICAL region (risk > THRESHOLD_CRITICAL)
     assert risk_engine.evaluate_risk_level(crit_th + 0.1) == "CRITICAL"

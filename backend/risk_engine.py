@@ -32,7 +32,7 @@ class RiskEngine:
     def evaluate_risk_level(self,risk):
         if risk < RiskEngine.THRESHOLD_LOW:
             risk_level="LOW"
-        elif risk<=RiskEngine.THRESHOLD_CRITICAL:
+        elif risk<RiskEngine.THRESHOLD_CRITICAL:
             risk_level="MEDIUM"
         else:
             risk_level="CRITICAL"

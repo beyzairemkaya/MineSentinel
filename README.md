@@ -110,7 +110,7 @@ The ESP32 does not wait for a backend round trip before activating local safety 
 2. **Post-Impact Immobility (Man-Down State):**
    A sustained baseline reading ($\approx 1.0g$) evaluated across an elapsed dwell window ($T_{\text{dwell}} \ge 10\text{ s}$) following an acute kinetic impact event.
 
-When either condition evaluates to true, the firmware asserts the warning LED and piezo siren directly via hardware GPIOs in $< 5\text{ ms}$. This protective behavior remains fully operational during network partitions or complete gateway communication outages.
+When either condition evaluates to true, the firmware asserts the warning LED and piezo siren directly via hardware GPIOs without waiting for a backend round-trip response.
 
 ### Asynchronous Incident Reporting
 
@@ -160,8 +160,8 @@ MineSentinel/
 │   │   ├── 001_offline_first_and_connectivity.md
 │   │   ├── 002_pessimistic_safety_gating.md
 │   │   ├── 003_dual_model_ml_architecture.md
-│   │   ├── 004-risk-score-design.md
-│   │   ├── 005-isolation-forest-contamination.md
+│   │   ├── 004_risk_score-design.md
+│   │   ├── 005_isolation-forest_contamination.md
 │   │   ├── 006_asynchronous_llm_reporting.md
 │   │   └── 007_dashboard_fragment_rendering.md
 │   ├── api_spec.md                             # HTTP and OpenAPI protocol specification
@@ -170,7 +170,8 @@ MineSentinel/
 │   ├── ml_pipeline.md                          # Dual-model feature and training pipeline
 │   └── risk_engine.md                          # Deterministic risk formulation specification
 ├── firmware/
-│   └── mine_safety_esp32.ino                   # ESP32 telemetry and local-alarm firmware
+│   └── mine_safety_esp32/
+│       └── mine_safety_esp32.ino               # ESP32 telemetry and local-alarm firmware
 ├── models/
 │   ├── anomaly_detector.joblib                 # Serialized Isolation Forest model
 │   └── risk_classifier.joblib                  # Serialized Random Forest classifier
@@ -299,7 +300,7 @@ Evaluates an edge-sensor payload using the deterministic risk engine, anomaly de
 }
 ```
 
-The response is designed to return in less than $10\text{ ms}$ under the defined local test conditions because external LLM generation is handled outside the request path.
+The response operates as a low-latency design target because external LLM generation is handled asynchronously outside the immediate ingestion request path.
 
 ## Architecture Decision Records
 
