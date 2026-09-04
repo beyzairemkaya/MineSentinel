@@ -68,7 +68,6 @@ def read_root():
         "system": "MineSentinel Safety Core",
         "version": "1.0.0"
     }
-
 @app.post("/api/telemetry", response_model=TelemetryResponse)
 def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks):
     """
@@ -76,30 +75,40 @@ def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks
     RiskEngine, AnomalyDetector, and Classifier, and triggers LLM on critical events.
     """
     try:
-        rule_score=risk_engine.calculate_risk_score(
+        rule_score = risk_engine.calculate_risk_score(
             gas=payload.gas_ppm,
             acc=payload.accel_g,
             durr=payload.duration_sec,
         )
-        is_anomaly=anomaly_detector.predict_single(payload.gas_ppm,payload.accel_g,payload.duration_sec)
-        predicted_risk, confidence, probabilities=risk_classifier.predict_single(payload.gas_ppm,payload.accel_g,payload.duration_sec)
-        emergency_report=None
+        is_anomaly = anomaly_detector.predict_single(payload.gas_ppm, payload.accel_g, payload.duration_sec)
+        predicted_risk, confidence, probabilities = risk_classifier.predict_single(
+            payload.gas_ppm, payload.accel_g, payload.duration_sec
+        )
+
+        # Pessimistic Safety Gating: Kural motoru ve ML kararlarından en yükseğini seç
+        rule_level = "CRITICAL" if rule_score >= 70.0 else ("MEDIUM" if rule_score >= 30.0 else "LOW")
+        severity_order = {"LOW": 1, "MEDIUM": 2, "CRITICAL": 3}
         
+        final_risk = predicted_risk
+        if severity_order[rule_level] > severity_order[predicted_risk]:
+            final_risk = rule_level
+
+        # Telemetri geçmişine tek ve nihai kayıt
         telemetry_history.append({
             "timestamp": time.time(),
             "gas_ppm": payload.gas_ppm,
             "accel_g": payload.accel_g,
             "duration_sec": payload.duration_sec,
-            "risk_level": predicted_risk,
+            "risk_level": final_risk,
             "rule_risk_score": rule_score,
             "is_anomaly": is_anomaly
         })
 
-        # 2. Sadece KRİTİK durumlarda arka plan LLM kontrolü yap
+        # Sadece nihai risk CRITICAL ise arka plan LLM çağrısını yap
         global last_llm_call_time
         current_time = time.time()
 
-        if predicted_risk == "CRITICAL":
+        if final_risk == "CRITICAL":
             if (current_time - last_llm_call_time) > LLM_COOLDOWN_SECONDS:
                 last_llm_call_time = current_time
                 background_tasks.add_task(
@@ -107,20 +116,19 @@ def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks
                     gas_ppm=payload.gas_ppm,
                     accel_g=payload.accel_g,
                     duration_sec=payload.duration_sec,
-                    risk_level=predicted_risk,
+                    risk_level=final_risk,
                     confidence=confidence
                 )
             else:
-                print(f"[*] Lock active: {int(current_time - last_llm_call_time)} seconds have passed since the last report. No new LLM call has been made.")
-            
+                print(f"[*] Lock active: {int(current_time - last_llm_call_time)}s elapsed. Cooldown active.")
 
-        
         emergency_report = latest_incident_report.get("report")
-        action_required = (predicted_risk != "LOW")
+        action_required = (final_risk != "LOW")
+        
         return TelemetryResponse(
             miner_id=payload.miner_id,
             zone=payload.zone,
-            risk_level=predicted_risk,
+            risk_level=final_risk,
             confidence=confidence,
             class_probabilities=probabilities,
             is_anomaly=is_anomaly,
@@ -128,6 +136,8 @@ def process_telemetry(payload: TelemetryInput, background_tasks: BackgroundTasks
             emergency_report=emergency_report,
             action_required=action_required
         )
+
+    
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")

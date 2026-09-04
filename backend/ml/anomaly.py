@@ -47,7 +47,7 @@ class AnomalyDetector:
 
 if __name__=="__main__":
     
-    BASE_DIR = Path(__file__).resolve().parent.parent
+    BASE_DIR = Path(__file__).resolve().parent.parent.parent
     data_path=BASE_DIR/"data"/"processed_sensor_data.csv"
     model_path=BASE_DIR / "models" / "anomaly_detector.joblib"
 
