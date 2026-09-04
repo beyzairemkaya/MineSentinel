@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-Underground mining command-and-control operations require a real-time Supervisory Control and Data Acquisition (SCADA) monitoring interface. The MineSentinel operations dashboard (`dashboard/app.py`) is implemented using Streamlit to visualize continuous telemetry streams, sensor risk gauges, anomaly alerts, and automated LLM crisis reports.
+Underground mining command-and-control operations require a real-time Supervisory Control and Data Acquisition (SCADA) monitoring interface. The MineSentinel operations dashboard (`dashboard/dashboard.py`) is implemented using Streamlit to visualize continuous telemetry streams, sensor risk gauges, anomaly alerts, and automated LLM crisis reports.
 
 However, standard real-time Streamlit architectures present two core engineering limitations:
 
@@ -16,7 +16,7 @@ However, standard real-time Streamlit architectures present two core engineering
 
 ## Decision
 
-We enforce **isolated fragment rendering** and **environment-driven configuration** in `dashboard/app.py`.
+We enforce **isolated fragment rendering** and **environment-driven configuration** in `dashboard/dashboard.py`.
 
 ```text
 +-------------------------------------------------------------------+
