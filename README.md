@@ -42,7 +42,7 @@ The system follows an edge-first design. Local alarms remain available on the ES
   └── Pessimistic safety arbitration
           |
           ├── TelemetryResponse and local actuation command
-          ├── CRITICAL + expired cooldown → background Gemini report
+          ├── CRITICAL + expired cooldown → background Groq report
           └── GET /api/dashboard-data
                     |
                     v
@@ -96,17 +96,21 @@ Serialized models are stored in `models/` and loaded by the backend during appli
 
 ### Edge-Local Actuation
 
-The ESP32 does not wait for a backend round trip before activating local safety outputs. The local alarm condition is:
+The ESP32 does not wait for a backend round trip before activating local safety outputs. Local alarm actuation triggers immediately under either of the following physical states:
 
-$$
-\text{gas\_ppm} > 400.0
-\quad \lor \quad
-\text{accel\_g} > 2.0g
-\quad \lor \quad
-\text{accel\_g} < 0.4g
-$$
+1. **Instantaneous Environmental & Kinetic Thresholds:**
+   $$
+   \text{gas\_ppm} > 400.0
+   \quad \lor \quad
+   \text{accel\_g} > 2.0g
+   \quad \lor \quad
+   \text{accel\_g} < 0.4g
+   $$
 
-When this condition is met, the firmware drives the warning LED and piezo siren directly, with a target actuation time below $5\text{ ms}$. This behavior remains available during network interruption.
+2. **Post-Impact Immobility (Man-Down State):**
+   A sustained baseline reading ($\approx 1.0g$) evaluated across an elapsed dwell window ($T_{\text{dwell}} \ge 10\text{ s}$) following an acute kinetic impact event.
+
+When either condition evaluates to true, the firmware asserts the warning LED and piezo siren directly via hardware GPIOs in $< 5\text{ ms}$. This protective behavior remains fully operational during network partitions or complete gateway communication outages.
 
 ### Asynchronous Incident Reporting
 
@@ -142,7 +146,7 @@ MineSentinel/
 │   ├── ml/
 │   │   ├── anomaly.py                          # Isolation Forest training and inference
 │   │   └── classifier.py                       # Random Forest training and inference
-│   ├── llm.py                                  # Gemini generative crisis-reporting pipeline
+│   ├── llm.py                                  # Groq generative crisis-reporting pipeline
 │   ├── main.py                                 # FastAPI ingestion engine and safety arbitration
 │   ├── risk_engine.py                          # Deterministic mathematical scoring engine
 │   └── schemas.py                              # Pydantic V2 request and response contracts
@@ -180,13 +184,13 @@ MineSentinel/
 │   ├── test_api.py                             # Telemetry ingestion and endpoint tests
 │   ├── test_models.py                          # ML model serialization and inference tests
 │   └── test_risk_engine.py                     # Deterministic threshold validation suite
-├── .env                                        # Environment variables (API keys, URLs)
+├── .env.example                                       # Environment variables (API keys, URLs)
 ├── .gitignore                                  # Git exclusion and tracking filters
 ├── CHANGELOG.md                                # Release notes and architectural evolution
 ├── ideas_for_v2.md                             # Roadmap and upcoming industrial features
 ├── LICENSE                                     # MIT License specification
 ├── README.md                                   # Primary system showcase and architecture vitrine
-└── requirements.txt                            # Pinned production Python dependencies
+└── requirements.txt                            # Production runtime Python dependencies
 ```
 
 ## Getting Started
@@ -195,7 +199,7 @@ MineSentinel/
 
 - Python 3
 - `pip`
-- A Google Gemini API key for LLM-assisted incident reporting
+- A Groq API key for LLM-assisted incident reporting
 - An ESP32 development environment when running the hardware firmware
 
 ### 1. Clone and Install
@@ -227,7 +231,7 @@ pip install -r requirements.txt
 Create a `.env` file in the repository root:
 
 ```env
-GEMINI_API_KEY="your-google-gemini-api-key"
+GROQ_API_KEY="your-groq-api-key"
 BACKEND_URL="http://localhost:8000"
 ```
 
@@ -246,7 +250,7 @@ Swagger UI is available at `http://localhost:8000/docs`.
 In a second terminal:
 
 ```bash
-streamlit run dashboard/app.py
+streamlit run dashboard/dashboard.py
 ```
 
 The dashboard is available at `http://localhost:8501`.
@@ -311,10 +315,11 @@ Engineering decisions and trade-offs are documented in [`docs/decisions/`](docs/
 
 ## Documentation
 
-- [System architecture](docs/architecture.md)
 - [Hardware specification](docs/hardware.md)
 - [API specification](docs/api_spec.md)
 - [Machine-learning pipeline](docs/ml_pipeline.md)
+- [Risk engine formulation](docs/risk_engine.md)
+- [Demo scenario runbook](docs/demo_scenario.md)
 
 ## License
 

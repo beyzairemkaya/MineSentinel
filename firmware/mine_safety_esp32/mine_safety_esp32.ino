@@ -16,22 +16,23 @@ const char* SERVER_URL = "http://YOUR_LOCAL_IP:8000/api/telemetry";
 
 
 // --- Hardware Pins ---
-#define MQ2_PIN    34
-#define LED_PIN    2      
-#define BUZZER_PIN 4      
+#define MQ2_PIN 34
+#define LED_PIN 2
+#define BUZZER_PIN 4
 
-const int MPU_ADDR = 0x68; // Scanner'ın bulduğu kesin adres
-unsigned long eventStartTime = 0; 
-bool hazardActive = false;     
+const int MPU_ADDR = 0x68;  // Scanner'ın bulduğu kesin adres
+unsigned long immobilityStartTime = 0;
+unsigned long lastImpactTime = 0;
+bool impactDetected = false;
 
 void setup() {
   Serial.begin(115200);
-  
+
   pinMode(LED_PIN, OUTPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
   digitalWrite(BUZZER_PIN, LOW);
-  
+
   delay(1000);
 
   // 1. I2C Bus Configuration
@@ -41,8 +42,8 @@ void setup() {
 
   // 2. MPU6050'yi Uyandırma (Power Management Register 0x6B)
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x6B); // PWR_MGMT_1 register
-  Wire.write(0);    // 0 yazarak uyku modundan çıkarıyoruz
+  Wire.write(0x6B);  // PWR_MGMT_1 register
+  Wire.write(0);     // 0 yazarak uyku modundan çıkarıyoruz
   byte error = Wire.endTransmission();
 
   if (error == 0) {
@@ -61,20 +62,26 @@ void setup() {
   WiFi.setSleep(false);
 
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
+  unsigned long wifiStartTime = millis();
+
+  while (WiFi.status() != WL_CONNECTED && millis() - wifiStartTime < 10000) {
     delay(500);
     Serial.print(".");
   }
 
-  Serial.println("\n[+] Wi-Fi connected successfully.");
-  Serial.print("[+] Assigned ESP32 IP: ");
-  Serial.println(WiFi.localIP());
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\n[+] Wi-Fi connected successfully.");
+    Serial.print("[+] Assigned ESP32 IP: ");
+    Serial.println(WiFi.localIP());
+  } else {
+    Serial.println("\n[-] Wi-Fi unavailable. Continuing in offline safety mode.");
+  }
 }
 
 void loop() {
   // 1. Direct I2C Read from MPU6050 Registers (0x3B to 0x40)
   Wire.beginTransmission(MPU_ADDR);
-  Wire.write(0x3B); // ACCEL_XOUT_H register
+  Wire.write(0x3B);  // ACCEL_XOUT_H register
   Wire.endTransmission(false);
   Wire.requestFrom(MPU_ADDR, 6, true);
 
@@ -94,23 +101,48 @@ void loop() {
   int rawGas = analogRead(MQ2_PIN);
   float gasPpm = map(rawGas, 0, 4095, 150, 1000);
 
-  // 3. Hazard Duration Tracking
-  bool isDanger = (gasPpm > 400.0 || accelG > 2.0 || accelG < 0.4);
 
-  if (isDanger) {
-    if (!hazardActive) {
-      hazardActive = true;
-      eventStartTime = millis();
-    }
-  } else {
-    hazardActive = false;
+  // 3. Impact and Post-Impact Immobility Tracking
+  bool gasDanger = gasPpm > 400.0;
+  bool impactNow = accelG > 2.0;
+  bool freeFall = accelG < 0.4;
+  bool isStill = abs(accelG - 1.0) <= 0.08;
+
+  if (impactNow) {
+    impactDetected = true;
+    lastImpactTime = millis();
+    immobilityStartTime = 0;
+  }
+
+
+  if (impactDetected && millis() - lastImpactTime > 30000) {
+    impactDetected = false;
+    immobilityStartTime = 0;
   }
 
   float durationSec = 0.0;
-  if (hazardActive) {
-    durationSec = (float)(millis() - eventStartTime) / 1000.0;
-    if (durationSec > 10.0) durationSec = 10.0;
+
+  if (impactDetected && isStill) {
+    if (immobilityStartTime == 0) {
+      immobilityStartTime = millis();
+    }
+
+    durationSec =
+      (float)(millis() - immobilityStartTime) / 1000.0;
+
+    if (durationSec > 10.0) {
+      durationSec = 10.0;
+    }
+  } else {
+    immobilityStartTime = 0;
   }
+
+  bool manDown = impactDetected && durationSec >= 10.0;
+  bool isDanger = gasDanger || impactNow || freeFall || manDown;
+
+
+  digitalWrite(LED_PIN, isDanger ? HIGH : LOW);
+  digitalWrite(BUZZER_PIN, isDanger ? HIGH : LOW);
 
   // 4. Send Telemetry via HTTP POST
   if (WiFi.status() == WL_CONNECTED) {
@@ -119,15 +151,15 @@ void loop() {
     http.addHeader("Content-Type", "application/json");
     http.setTimeout(2500);
 
-    
+
     StaticJsonDocument<256> doc;
     doc["gas_ppm"] = gasPpm;
     doc["accel_g"] = accelG;
     doc["duration_sec"] = durationSec;
     doc["miner_id"] = "MINER-ESP32";
     doc["zone"] = "Sector-3";
-    
-    
+
+
 
     String requestBody;
     serializeJson(doc, requestBody);
@@ -141,17 +173,15 @@ void loop() {
 
       StaticJsonDocument<256> resDoc;
       DeserializationError err = deserializeJson(resDoc, response);
-      
+
       if (!err) {
         bool actionRequired = resDoc["action_required"] | false;
-        if (actionRequired) {
-          Serial.println("[!] CRITICAL ALARM: Evacuate zone!");
-          digitalWrite(LED_PIN, HIGH);
-          digitalWrite(BUZZER_PIN, HIGH);
-        } else {
-          digitalWrite(LED_PIN, LOW);
-          digitalWrite(BUZZER_PIN, LOW);
+        bool finalAlarm = isDanger || actionRequired;
+        if (finalAlarm) {
+          Serial.println("[!] ALARM ACTIVE!");
         }
+        digitalWrite(LED_PIN, finalAlarm ? HIGH : LOW);
+        digitalWrite(BUZZER_PIN, finalAlarm ? HIGH : LOW);
       }
     } else {
       Serial.println("[-] HTTP Request Error: " + http.errorToString(httpResponseCode));
