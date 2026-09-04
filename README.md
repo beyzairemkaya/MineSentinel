@@ -61,14 +61,14 @@ If Wi-Fi connectivity is lost, the ESP32 continues to evaluate local sensor thre
 
 The deterministic risk engine and Random Forest classifier are evaluated independently. The final operational class is selected using the more severe result:
 
-$$
-\text{final\_risk}
+```math
+\mathrm{final\_risk}
 =
 \max\left(
-\text{severity}(R_{\text{level}}),
-\text{severity}(\text{predicted\_risk})
+\mathrm{severity}(R_{\mathrm{level}}),
+\mathrm{severity}(\mathrm{predicted\_risk})
 \right)
-$$
+```
 
 The risk engine produces a score $R \in [0,100]$, with scores greater than or equal to `70.0` classified as `CRITICAL`. A deterministic critical result cannot be downgraded by the machine-learning classifier.
 
@@ -78,14 +78,15 @@ This arbitration rule preserves known physical safety boundaries while retaining
 
 Inference operates on the feature vector:
 
-$$
-\mathbf{x} =
+```math
+\mathbf{x}
+=
 \begin{bmatrix}
-\text{gas\_ppm} \\
-\text{accel\_g} \\
-\text{duration\_sec}
+\mathrm{gas\_ppm} \\
+\mathrm{accel\_g} \\
+\mathrm{duration\_sec}
 \end{bmatrix}
-$$
+```
 
 | Model | Configuration | Responsibility |
 |---|---|---|
@@ -160,7 +161,7 @@ MineSentinel/
 │   │   ├── 001_offline_first_and_connectivity.md
 │   │   ├── 002_pessimistic_safety_gating.md
 │   │   ├── 003_dual_model_ml_architecture.md
-│   │   ├── 004_risk_score-design.md
+│   │   ├── 004_risk_score_design.md
 │   │   ├── 005_isolation-forest_contamination.md
 │   │   ├── 006_asynchronous_llm_reporting.md
 │   │   └── 007_dashboard_fragment_rendering.md
